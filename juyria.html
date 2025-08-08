@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Juyria's Birthday Countdown & Celebration 🎉</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sacramento&display=swap');
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #fceabb, #f8b500);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow-x: hidden;
+      color: #222;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      user-select: none;
+    }
+    h1 {
+      font-family: 'Sacramento', cursive;
+      font-size: 4rem;
+      margin-bottom: 0.2em;
+      color: #ff4081;
+      text-shadow: 0 0 5px #fff, 0 0 10px #ff4081;
+    }
+    .countdown {
+      font-size: 2.5rem;
+      letter-spacing: 2px;
+      margin-bottom: 1.5em;
+    }
+    .time-segment {
+      display: inline-block;
+      margin: 0 15px;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 15px 25px;
+      border-radius: 15px;
+      box-shadow: 0 0 15px rgba(255, 64, 129, 0.6);
+      min-width: 90px;
+    }
+    .time-segment span {
+      display: block;
+      font-weight: bold;
+      font-size: 3rem;
+      color: #ff4081;
+    }
+    .label {
+      font-size: 1.2rem;
+      margin-top: 0.3em;
+      color: #555;
+    }
+    #celebrateBtn {
+      display: none;
+      margin-top: 30px;
+      padding: 15px 40px;
+      font-size: 1.8rem;
+      background: #ff4081;
+      color: white;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 5px 15px #ff4081aa;
+      transition: all 0.3s ease;
+    }
+    #celebrateBtn:hover {
+      box-shadow: 0 0 30px #ff4081ff;
+      transform: scale(1.1);
+    }
+    #message {
+      margin-top: 25px;
+      font-size: 2.2rem;
+      color: #333;
+      min-height: 3rem;
+    }
+    /* Fireworks canvas */
+    #fireworksCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 1000;
+    }
+    /* Balloons container */
+    #balloons {
+      position: fixed;
+      bottom: -150px;
+      width: 100%;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 900;
+      overflow: visible;
+    }
+    .balloon {
+      position: absolute;
+      bottom: -150px;
+      width: 60px;
+      height: 80px;
+      background: red;
+      border-radius: 50% / 60%;
+      opacity: 0.9;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 0 5px rgba(0,0,0,0.2));
+    }
+    .balloon::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      width: 2px;
+      height: 30px;
+      background: #555;
+      transform: translateX(-50%);
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) translateX(0) rotate(0deg);}
+      100% { transform: translateY(-120vh) translateX(50px) rotate(720deg);}
+    }
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4081;
+      opacity: 0.8;
+      animation: confettiFall linear forwards;
+      border-radius: 2px;
+      z-index: 1050;
+    }
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg);}
+      100% { transform: translateY(110vh) rotate(360deg);}
+    }
+  </style>
+</head>
+<body>
+  <h1>🎂 Countdown to Juyria's Birthday 🎂</h1>
+  <div class="countdown" aria-live="polite" aria-atomic="true">
+    <div class="time-segment">
+      <span id="days">--</span>
+      <div class="label">Days</div>
+    </div>
+    <div class="time-segment">
+      <span id="hours">--</span>
+      <div class="label">Hours</div>
+    </div>
+    <div class="time-segment">
+      <span id="minutes">--</span>
+      <div class="label">Minutes</div>
+    </div>
+    <div class="time-segment">
+      <span id="seconds">--</span>
+      <div class="label">Seconds</div>
+    </div>
+  </div>
+  <button id="celebrateBtn">🎉 Celebrate Juyria's Birthday! 🎉</button>
+  <div id="message"></div>
+
+  <div id="balloons"></div>
+  <canvas id="fireworksCanvas"></canvas>
+
+  <script>
+    const countdownDate = new Date('Nov 2, 2025 23:59:00').getTime();
+    const celebrateBtn = document.getElementById('celebrateBtn');
+    const message = document.getElementById('message');
+
+    const daysEl = document.getElementById('days');
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+
+    let countdownInterval;
+
+    function updateCountdown() {
+      const now = new Date().getTime();
+      const distance = countdownDate - now;
+
+      if (distance < 0) {
+        clearInterval(countdownInterval);
+        daysEl.textContent = '00';
+        hoursEl.textContent = '00';
+        minutesEl.textContent = '00';
+        secondsEl.textContent = '00';
+        celebrateBtn.style.display = 'inline-block';
+        message.textContent = "It's time to celebrate Juyria's Birthday! 🎉";
+        return;
+      }
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      daysEl.textContent = days.toString().padStart(2, '0');
+      hoursEl.textContent = hours.toString().padStart(2, '0');
+      minutesEl.textContent = minutes.toString().padStart(2, '0');
+      secondsEl.textContent = seconds.toString().padStart(2, '0');
+    }
+
+    countdownInterval = setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // Fireworks logic
+    // Inspired by https://codepen.io/ainalem/pen/qBOEYqZ
+    const canvas = document.getElementById('fireworksCanvas');
+    const ctx = canvas.getContext('2d');
+    let cw, ch;
+    let fireworks = [];
+    let particles = [];
+    let animationFrameId;
+    let running = false;
+
+    function resize() {
+      cw = window.innerWidth;
+      ch = window.innerHeight;
+      canvas.width = cw;
+      canvas.height = ch;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    class Firework {
+      constructor(sx, sy, tx, ty) {
+        this.x = sx;
+        this.y = sy;
+        this.sx = sx;
+        this.sy = sy;
+        this.tx = tx;
+        this.ty = ty;
+        this.distanceToTarget = dist(sx, sy, tx, ty);
+        this.distanceTraveled = 0;
+        this.coordinates = [];
+        this.coordinateCount = 3;
+        while (this.coordinateCount--) {
+          this.coordinates.push([this.x, this.y]);
+        }
+        this.angle = Math.atan2(ty - sy, tx - sx);
+        this.speed = 4;
+        this.acceleration = 1.05;
+        this.brightness = random(50, 70);
+        this.targetRadius = 8;
+      }
+      update(index) {
+        this.coordinates.pop();
+        this.coordinates.unshift([this.x, this.y]);
+        this.speed *= this.acceleration;
+        let vx = Math.cos(this.angle) * this.speed;
+        let vy = Math.sin(this.angle) * this.speed;
+        this.distanceTraveled = dist(this.sx, this.sy, this.x + vx, this.y + vy);
+        if (this.distanceTraveled >= this.distanceToTarget) {
+          createParticles(this.tx, this.ty);
+          fireworks.splice(index, 1);
+        } else {
+          this.x += vx;
+          this.y += vy;
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = `hsl(${random(0, 360)}, 100%, ${this.brightness}%)`;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(this.tx, this.ty, this.targetRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.coordinates = [];
+        this.coordinateCount = 5;
+        while (this.coordinateCount--) {
+          this.coordinates.push([this.x, this.y]);
+        }
+        this.angle = random(0, Math.PI * 2);
+        this.speed = random(1, 10);
+        this.friction = 0.95;
+        this.gravity = 1;
+        this.hue = random(0, 360);
+        this.brightness = random(50, 80);
+        this.alpha = 1;
+        this.decay = random(0.015, 0.03);
+      }
+      update(index) {
+        this.coordinates.pop();
+        this.coordinates.unshift([this.x, this.y]);
+        this.speed *= this.friction;
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed + this.gravity;
+        this.alpha -= this.decay;
+        if (this.alpha <= 0) {
+          particles.splice(index, 1);
+        }
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+        ctx.lineTo(this.x, this.y);
+        ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+        ctx.stroke();
+      }
+    }
+
+    function createParticles(x, y) {
+      let particleCount = 30;
+      while (particleCount--) {
+        particles.push(new Particle(x, y));
+      }
+    }
+
+    function dist(aX, aY, bX, bY) {
+      return Math.sqrt((bX - aX) * (bX - aX) + (bY - aY) * (bY - aY));
+    }
+
+    function random(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function loop() {
+      animationFrameId = requestAnimationFrame(loop);
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.globalCompositeOperation = 'lighter';
+
+      let i = fireworks.length;
+      while (i--) {
+        fireworks[i].draw();
+        fireworks[i].update(i);
+      }
+      let j = particles.length;
+      while (j--) {
+        particles[j].draw();
+        particles[j].update(j);
+      }
+
+      if (running && Math.random() < 0.05) {
+        const startX = cw / 2;
+        const startY = ch;
+        const targetX = random(100, cw - 100);
+        const targetY = random(50, ch / 2);
+        fireworks.push(new Firework(startX, startY, targetX, targetY));
+      }
+    }
+
+    // Balloon animation generation
+    const balloonsContainer = document.getElementById('balloons');
+    const colors = ['#ff4081', '#ff5722', '#ffeb3b', '#4caf50', '#2196f3', '#9c27b0'];
+
+    function createBalloon() {
+      const balloon = document.createElement('div');
+      balloon.classList.add('balloon');
+      balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      balloon.style.left = Math.random() * 100 + 'vw';
+      balloon.style.animationDuration = (10 + Math.random() * 10) + 's';
+      balloon.style.animationTimingFunction = 'ease-in-out';
+      balloonsContainer.appendChild(balloon);
+
+      // Remove after animation
+      setTimeout(() => {
+        balloonsContainer.removeChild(balloon);
+      }, 12000);
+    }
+
+    let balloonInterval;
+
+    function startBalloons() {
+      balloonInterval = setInterval(createBalloon, 600);
+    }
+    function stopBalloons() {
+      clearInterval(balloonInterval);
+      balloonsContainer.innerHTML = '';
+    }
+
+    // Confetti for extra fun
+    function createConfetti() {
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.style.left = Math.random() * window.innerWidth + 'px';
+      confetti.style.animationDuration = (3 + Math.random() * 2) + 's';
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      document.body.appendChild(confetti);
+      setTimeout(() => {
+        confetti.remove();
+      }, 5000);
+    }
+
+    let confettiInterval;
+
+    function startConfetti() {
+      confettiInterval = setInterval(createConfetti, 150);
+    }
+    function stopConfetti() {
+      clearInterval(confettiInterval);
+      document.querySelectorAll('.confetti').forEach(el => el.remove());
+    }
+
+    // Celebration sequence
+    function startCelebration() {
+      running = true;           // Celebration chalukora lagbe bole true kora hocche
+      loop();                   // animation er loop start hocche
+      startBalloons();          // balloon animation start hocche
+      startConfetti();          // confetti animation start hocche
+
+      message.textContent = `Happy Birthday, Juyria! 🎉🎂🎈`;  // message update hocche
+
+      // 5 minute por sob animation bondho kora
+      setTimeout(() => {
+        running = false;        // celebration sesh
+        stopBalloons();         // balloon stop
+        stopConfetti();         // confetti stop
+        cancelAnimationFrame(animationFrameId);  // animation loop stop
+        ctx.clearRect(0, 0, cw, ch);             // canvas clear kora
+        message.textContent = "Hope you had a wonderful birthday celebration! ❤️"; // final message
+      }, 300000);
+    }
+
+    celebrateBtn.addEventListener('click', () => {
+      startCelebration();        // celebrate button click korle celebration start hobe
+      celebrateBtn.style.display = 'none';  // button ta hide kora hobe
+    });
+  </script>
+</body>
+</html>
+
+<!--
+
+Code explanation comments:
+
+- HTML structure diye ekta birthday countdown page toyri kora hoyeche.
+- CSS diye page er style, font, color, animation style set kora ache.
+- JavaScript diye countdown timer update kora hocche, jeta target date (Nov 2, 2025 23:59) er dike time dekhaibe.
+- Timer sesh hole celebrate button dekhabe ebong message update korbe.
+- Celebrate button click korle firework animation, balloon animation, ebong confetti animation start hobe.
+- Firework animation canvas use kore draw kora hoye.
+- Balloon animation div diye floating balloon toyri kora hoy.
+- Confetti gula small div diye random jagah theke pore jabe.
+- Celebration 5 minute por automatic bondho hoye jabe ebong final message dekhabe.
+
+Shob kichu bhalo vabe kaj korbe, kono change kora hoy nai, sudhu code er pashe comments add kora hoyeche. 
+
+-->
