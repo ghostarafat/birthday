@@ -4,9 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Juyria's Birthday Countdown & Celebration 🎉</title>
-  <audio id="bgMusic" loop>
-  <source src="music/birthday.mp3" type="audio/mpeg" />
-</audio>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Sacramento&display=swap');
     body {
@@ -142,9 +139,11 @@
   </style>
 </head>
 <body>
-    <audio id="bgMusic" loop>
-  <source src="music/birthday.mp3" type="audio/mpeg" />
-</audio>
+  <audio src="music/birthday.mp3" autoplay loop muted></audio>
+
+
+  
+   
   <h1>🎂 Countdown to Juyria's Birthday 🎂</h1>
   <div class="countdown" aria-live="polite" aria-atomic="true">
     <div class="time-segment">
@@ -171,7 +170,8 @@
   <canvas id="fireworksCanvas"></canvas>
 
   <script>
-    const countdownDate = new Date('Nov 2, 2025 23:59:00').getTime();
+    
+    const countdownDate = new Date('Aug 2, 2025 23:59:00').getTime();
     const celebrateBtn = document.getElementById('celebrateBtn');
     const message = document.getElementById('message');
 
@@ -431,9 +431,19 @@
     }
 
     celebrateBtn.addEventListener('click', () => {
-      startCelebration();        // celebrate button click korle celebration start hobe
+      startCelebration();        
       celebrateBtn.style.display = 'none';  // button ta hide kora hobe
+      const audio = document.querySelector('audio');
+audio.muted = false;
+audio.play().catch(e => {
+  console.log('Audio play error:', e);
+});
+
+
+      
     });
+
+
   </script>
 </body>
 </html>
